@@ -10,7 +10,7 @@ npm test
 > Sem a implementação, os testes falham com `Cannot find module`, e isso é esperado.
 
 ## Regras adotadas (dominó com compra)
-
+   
 - São **28 peças** (duplo-seis). Uma peça é `[a, b]`, e `[a, b]` e `[b, a]` são a mesma peça.
 - Cada jogador recebe **7 peças**. As 14 restantes formam o **monte**.
 - Começa quem tem a **maior dupla**. Se ninguém tiver dupla, começa quem tem a peça de maior soma; em caso de empate na soma, vale a que tem o maior lado. A primeira jogada tem que ser essa peça.
