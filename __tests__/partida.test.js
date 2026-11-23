@@ -1,28 +1,3 @@
-/**
- * Dominó — partida para 2 jogadores (jogadores 0 e 1), com compra.
- *
- * new PartidaDomino({ maos?, monte?, rng? })
- *   - maos: [mao0, mao1] com 7 peças cada. Sem `maos`, as 28 peças são embaralhadas (rng) e
- *     cada jogador recebe 7; as 14 restantes formam o monte.
- *   - monte: peças compráveis, na ordem em que serão compradas (comprar tira a PRIMEIRA).
- *     Se `maos` for informado e `monte` não, o monte são as 14 peças restantes (embaralhadas).
- *     Peças que não estão em nenhuma mão nem no monte ficam fora do jogo.
- *
- * Regras:
- *   - Começa quem tem a maior dupla (6-6, senão 5-5 ...). Se ninguém tiver dupla, começa quem tem a
- *     peça de maior soma (empate na soma: a que tem o maior lado). A primeira jogada é OBRIGATORIAMENTE
- *     essa peça (pecaInicial).
- *   - Cada peça é encaixada numa das pontas ('esquerda' ou 'direita') com um lado igual ao número da ponta.
- *     A mesa guarda as peças já orientadas, de forma que os números vizinhos coincidem.
- *   - Se o lado não for informado e a peça só encaixar em uma ponta, vai para ela; se encaixar nas
- *     duas, é obrigatório informar o lado.
- *   - Sem jogada possível: compra do monte (quantas vezes precisar, sem passar a vez).
- *     Com o monte vazio: passa a vez. Não é permitido comprar/passar tendo jogada.
- *   - Fim por "batida": quem fica sem peças vence.
- *   - Fim por "trancada": monte vazio e nenhum dos dois consegue jogar. Vence quem tiver menos
- *     pontos na mão; se empatar, não há vencedor (vencedor = null).
- *   - pontos = soma das peças na mão do perdedor (0 em empate).
- */
 const { criarPecas, PartidaDomino } = require('../src/domino');
 
 const chave = ([a, b]) => `${Math.min(a, b)}-${Math.max(a, b)}`;
@@ -32,9 +7,6 @@ const restantes = (...maos) => {
 };
 const ordenar = (pecas) => pecas.map(chave).sort();
 
-// ---------- cenários ----------
-
-// Batida: jogador 0 tem uma "escada" 6-6 ... 1-0 e monte vazio
 const BATIDA = {
   maos: [
     [[6, 6], [6, 5], [5, 4], [4, 3], [3, 2], [2, 1], [1, 0]],
@@ -43,15 +15,12 @@ const BATIDA = {
   monte: [],
 };
 
-// Compra: jogador 1 não tem 6 e precisa comprar até achar um
 const COMPRA_MAOS = [
   [[6, 6], [6, 5], [5, 4], [4, 3], [3, 2], [2, 1], [1, 0]],
   [[0, 0], [1, 1], [2, 2], [3, 3], [4, 4], [5, 5], [0, 3]],
 ];
 const COMPRA = { maos: COMPRA_MAOS, monte: restantes(...COMPRA_MAOS) };
-// monte em ordem: [0,2] [0,4] [0,5] [0,6] [1,3] ...
 
-// Trancada com vencedor: jogador 0 termina com 3 pontos, jogador 1 com 18
 const TRANCADA = {
   maos: [
     [[6, 6], [6, 1], [0, 0], [0, 1], [0, 2], [1, 1], [1, 2]],
@@ -60,7 +29,6 @@ const TRANCADA = {
   monte: [],
 };
 
-// Trancada em empate: depois do 6-6 ninguém tem 6; ambos ficam com 26 pontos
 const EMPATE = {
   maos: [
     [[6, 6], [0, 1], [0, 2], [0, 3], [1, 2], [4, 4], [4, 5]],
@@ -68,8 +36,6 @@ const EMPATE = {
   ],
   monte: [],
 };
-
-// ---------- testes ----------
 
 describe('distribuição', () => {
   test('sem mãos definidas: 7 peças para cada um e 14 no monte, sem repetição', () => {
@@ -99,7 +65,7 @@ describe('distribuição', () => {
 
   test('rejeita peça repetida entre as mãos (inclusive invertida)', () => {
     const mao1 = [...BATIDA.maos[1]];
-    mao1[0] = [5, 6]; // [6,5] já está na mão 0
+    mao1[0] = [5, 6];
     expect(() => new PartidaDomino({ maos: [BATIDA.maos[0], mao1], monte: [] })).toThrow();
   });
 
@@ -169,7 +135,7 @@ describe('quem começa', () => {
     ];
     const p = new PartidaDomino({ maos, monte: [] });
     expect(p.jogadorInicial).toBe(1);
-    expect(chave(p.pecaInicial)).toBe('1-6'); // 1-6 e 2-5 somam 7; 1-6 tem o maior lado
+    expect(chave(p.pecaInicial)).toBe('1-6');
   });
 
   test('a primeira jogada tem que ser a peça inicial', () => {
@@ -240,8 +206,8 @@ describe('jogar', () => {
   });
 
   test('sem lado informado, a peça vai para a única ponta possível', () => {
-    p.jogar(1, [6, 0], 'direita'); // pontas [6, 0]
-    p.jogar(0, [5, 6]); // só encaixa no 6 (esquerda)
+    p.jogar(1, [6, 0], 'direita');
+    p.jogar(0, [5, 6]);
     expect(p.mesa).toEqual([[5, 6], [6, 6], [6, 0]]);
     expect(p.pontas).toEqual([5, 0]);
   });
@@ -275,7 +241,7 @@ describe('jogadasPossiveis / podeJogar', () => {
   test('lista peça e lado de cada jogada possível', () => {
     const p = new PartidaDomino(BATIDA);
     p.jogar(0, [6, 6]);
-    p.jogar(1, [6, 0], 'direita'); // pontas [6, 0]
+    p.jogar(1, [6, 0], 'direita');
     const jogadas = p.jogadasPossiveis(0).map(({ peca, lado }) => `${chave(peca)}@${lado}`).sort();
     expect(jogadas).toEqual(['0-1@direita', '5-6@esquerda']);
   });
@@ -310,7 +276,7 @@ describe('comprar', () => {
     expect(chave(p.comprar(1))).toBe('0-5');
     expect(chave(p.comprar(1))).toBe('0-6');
     expect(p.podeJogar(1)).toBe(true);
-    expect(() => p.comprar(1)).toThrow(); // agora tem jogada
+    expect(() => p.comprar(1)).toThrow();
     expect(p.tamanhoMonte).toBe(10);
     p.jogar(1, [0, 6], 'direita');
     expect(p.pontas).toEqual([6, 0]);
@@ -362,16 +328,16 @@ describe('passar', () => {
 describe('fim por batida', () => {
   function jogarAteBater(p) {
     p.jogar(0, [6, 6]);
-    p.jogar(1, [6, 0], 'direita'); // [6,0]
-    p.jogar(0, [6, 5], 'esquerda'); // [5,0]
+    p.jogar(1, [6, 0], 'direita');
+    p.jogar(0, [6, 5], 'esquerda');
     p.jogar(1, [5, 5], 'esquerda');
-    p.jogar(0, [5, 4], 'esquerda'); // [4,0]
+    p.jogar(0, [5, 4], 'esquerda');
     p.jogar(1, [4, 4], 'esquerda');
-    p.jogar(0, [4, 3], 'esquerda'); // [3,0]
+    p.jogar(0, [4, 3], 'esquerda');
     p.jogar(1, [3, 3], 'esquerda');
-    p.jogar(0, [3, 2], 'esquerda'); // [2,0]
+    p.jogar(0, [3, 2], 'esquerda');
     p.jogar(1, [2, 2], 'esquerda');
-    p.jogar(0, [2, 1], 'esquerda'); // [1,0]
+    p.jogar(0, [2, 1], 'esquerda');
     p.jogar(1, [1, 1], 'esquerda');
   }
 
@@ -421,28 +387,28 @@ describe('fim por trancada', () => {
     const p = new PartidaDomino(TRANCADA);
     p.jogar(0, [6, 6]);
     p.passar(1);
-    p.jogar(0, [6, 1], 'direita'); // [6,1]
+    p.jogar(0, [6, 1], 'direita');
     p.passar(1);
-    p.jogar(0, [1, 1], 'direita'); // [6,1]
+    p.jogar(0, [1, 1], 'direita');
     p.passar(1);
-    p.jogar(0, [1, 2], 'direita'); // [6,2]
-    p.jogar(1, [2, 3], 'direita'); // [6,3]
+    p.jogar(0, [1, 2], 'direita');
+    p.jogar(1, [2, 3], 'direita');
     p.passar(0);
-    p.jogar(1, [3, 4], 'direita'); // [6,4]
+    p.jogar(1, [3, 4], 'direita');
     p.passar(0);
-    p.jogar(1, [4, 5], 'direita'); // [6,5]
+    p.jogar(1, [4, 5], 'direita');
     p.passar(0);
     expect(p.finalizada).toBe(false);
-    p.jogar(1, [5, 5], 'direita'); // [6,5] — ninguém mais tem 6 nem 5
+    p.jogar(1, [5, 5], 'direita');
     expect(p.finalizada).toBe(true);
     expect(p.motivo).toBe('trancada');
-    expect(p.vencedor).toBe(0); // 3 pontos x 18 pontos
+    expect(p.vencedor).toBe(0);
     expect(p.pontos).toBe(18);
   });
 
   test('trava em empate: sem vencedor e 0 pontos', () => {
     const p = new PartidaDomino(EMPATE);
-    p.jogar(0, [6, 6]); // ninguém tem outro 6 e o monte está vazio
+    p.jogar(0, [6, 6]);
     expect(p.finalizada).toBe(true);
     expect(p.motivo).toBe('trancada');
     expect(p.vencedor).toBeNull();
@@ -473,10 +439,10 @@ describe('simulação', () => {
       }
       expect(['batida', 'trancada']).toContain(p.motivo);
       if (p.motivo === 'batida') expect(p.maoDoJogador(p.vencedor)).toEqual([]);
-      // a mesa é sempre uma corrente contínua
+
       const mesa = p.mesa;
       for (let k = 1; k < mesa.length; k++) expect(mesa[k][0]).toBe(mesa[k - 1][1]);
-      // nenhuma peça some nem duplica
+
       const total = mesa.length + p.maoDoJogador(0).length + p.maoDoJogador(1).length + p.tamanhoMonte;
       expect(total).toBe(28);
     }

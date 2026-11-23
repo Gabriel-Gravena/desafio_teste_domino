@@ -1,7 +1,3 @@
-/**
- * Dominó — peças (jogo "duplo-seis": 28 pedras de [0,0] a [6,6]).
- * Uma peça é um array [a, b] com 0 <= a, b <= 6. [a, b] e [b, a] são a MESMA peça.
- */
 const { criarPecas, ehDupla, somaPeca, pecasIguais, somaPontos } = require('../src/domino');
 
 describe('criarPecas', () => {
